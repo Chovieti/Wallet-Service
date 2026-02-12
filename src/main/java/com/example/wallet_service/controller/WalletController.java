@@ -37,7 +37,7 @@ public class WalletController {
     }
 
     // GET-method
-    @GetMapping("/wallet/{WALLET_UUID}")
+    @GetMapping("/wallets/{WALLET_UUID}")
     public ResponseEntity<BalanceResponse> getWalletBalance(@PathVariable("WALLET_UUID") UUID id) {
         BigDecimal balance = service.getBalance(id);
         return ResponseEntity.ok(new BalanceResponse(balance));
