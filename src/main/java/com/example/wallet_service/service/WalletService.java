@@ -1,5 +1,7 @@
 package com.example.wallet_service.service;
 
+import com.example.wallet_service.exception.InsufficientFundsException;
+import com.example.wallet_service.exception.WalletNotFoundException;
 import com.example.wallet_service.repository.WalletRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,21 +20,19 @@ public class WalletService {
 
     @Transactional
     public void deposit(UUID id, BigDecimal amount) {
-        // TODO заменить на исключение (баланс не изменился, так как кошелек не существует)
-        if (repository.depositOperation(id, amount) == 0) return;
+        if (repository.depositOperation(id, amount) == 0) throw new WalletNotFoundException(id);
     }
 
     @Transactional
     public void withdraw(UUID id, BigDecimal amount) {
-        // TODO заменить на исключение (кошелек не существует)
-        if (!repository.existsById(id)) return;
-        // TODO заменить на исключение (недостаточно средств на кошельке)
-        if (repository.withdrawOperation(id, amount) == 0) return;
+        if (repository.withdrawOperation(id, amount) == 0) {
+            BigDecimal balance = repository.findBalanceById(id).orElseThrow(() -> new WalletNotFoundException(id));
+            throw new InsufficientFundsException(id, balance, amount);
+        }
     }
 
     public BigDecimal getBalance(UUID id) {
         Optional<BigDecimal> balance = repository.findBalanceById(id);
-        // TODO заменить на исключение (кошелек не существует)
-        return balance.orElse(BigDecimal.ZERO);
+        return balance.orElseThrow(() -> new WalletNotFoundException(id));
     }
 }

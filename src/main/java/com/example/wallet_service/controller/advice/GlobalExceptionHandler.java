@@ -4,6 +4,8 @@ import com.example.wallet_service.dto.ErrorResponse;
 import com.example.wallet_service.exception.InsufficientFundsException;
 import com.example.wallet_service.exception.InvalidOperationTypeException;
 import com.example.wallet_service.exception.WalletNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -16,6 +18,7 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     // Обработчики моих исключений
     @ExceptionHandler(WalletNotFoundException.class)
@@ -53,9 +56,17 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable() {
-        ErrorResponse error = new ErrorResponse("Malformed JSON Request", "Invalid request format. Please check JSON syntax and field types.");
+        ErrorResponse error = new ErrorResponse("Malformed JSON Request",
+                "Invalid request format. Please check JSON syntax and field types.");
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
-    // TODO Обработчик всех остальных возможных ошибок на всякий случай, в идеале вообще не потребуется
+    // Обработчик всех остальных возможных ошибок на всякий случай, в идеале вообще не потребуется
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleAllExceptions(Exception ex) {
+        log.error("Internal server error: {}", ex.getMessage(), ex);
+        ErrorResponse error = new ErrorResponse("Internal Server Error",
+                "An unexpected error occurred. Please try again later.");
+        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 }
