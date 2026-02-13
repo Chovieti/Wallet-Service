@@ -6,7 +6,7 @@ services:
     env_file:
       - .env
     ports:
-      - "5432:5432"
+      - "${DB_PORT}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
@@ -15,10 +15,25 @@ services:
     container_name: wallet-app
     env_file:
       - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: ${APP_PROFILE}
     ports:
-      - "8080:8080"
+      - "${APP_PORT}:8080"
     depends_on:
       - postgres
+
+  app-test:
+    build:
+      context: .
+      target: builder
+    container_name: wallet-test
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: ${TEST_PROFILE}
+    depends_on:
+      - postgres
+    command: mvn test
 
 volumes:
   postgres-data:
