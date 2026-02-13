@@ -1,0 +1,39 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    container_name: wallet-postgres
+    env_file:
+      - .env
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: wallet-app
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: ${APP_PROFILE}
+    ports:
+      - "${APP_PORT}:8080"
+    depends_on:
+      - postgres
+
+  app-test:
+    build:
+      context: .
+      target: builder
+    container_name: wallet-test
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: ${TEST_PROFILE}
+    depends_on:
+      - postgres
+    command: mvn test
+
+volumes:
+  postgres-data:
